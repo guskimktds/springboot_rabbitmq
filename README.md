@@ -8,3 +8,16 @@ private Resource configResource;
 # 공통 Config XML 파일 로드하기
 @Value("classpath:com/gus/spring/commons/property/config-${spring.profile.acitve}.xml)
 private Resource commonConfigResource;
+
+# Spring boot Application class
+@Slf4j
+@SpringBootApplication
+@ComponentScan("com.gus.study")
+@EnableAsync
+@SuppressWarnings("all")
+public class Application extends SpringBootServletInitializer {
+
+    public static void main(String[] args){
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(Application.class).run(args);
+    }
+}
