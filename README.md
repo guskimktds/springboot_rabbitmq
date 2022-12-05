@@ -134,3 +134,94 @@ public MessageSourceAccessor messageSourceAccessor() {
 
 # [Spring] MesageSource 설정하기 - 공통 메시지 처리 (with 다국어처리)
 # 출처) https://devks.tistory.com/42
+# org.springframework.context.support.ResourceBundleMessageSource
+# ResourceBundle Class, MessageFormat Class 기반으로 만들어져 Bundle에 특정 명칭으로 접근이 가능합니다.
+# org.springframework.context.support.ReloadableResourceBundelMessageSource
+# Property  설정을 통해 Reloading 정보를 입력해 주기적인 Message Reloading을 수행합니다. 
+# 그렇기 때문에 Application 종료없이도 실행 도중에 변경이 가능한 장점이 있습니다.
+
+
+# LocalValidatorFactoryBean() 사용법
+
+지난번에 작성한 Java Bean Validation 제대로 알고 쓰자에 이어서 Spring Boot 환경에서 Validation을 어떻게 사용할 수 있는지 확인해보겠습니다. Spring에서도 Hibernate Validator를 사용합니다. Java Bean Validation에 대해서 잘 모른다면 지난 글을 먼저 읽어보는 것을 추천합니다.
+
+# 출처) https://kapentaz.github.io/java/Java-Bean-Validation-%EC%A0%9C%EB%8C%80%EB%A1%9C-%EC%95%8C%EA%B3%A0-%EC%93%B0%EC%9E%90/#
+
+Dependency
+Spring Boot에서는 spring-boot-starter-validation를 추가하면 Validation 관련 필요한 라이브러리가 모두 추가됩니다.
+
+implementation("org.springframework.boot:spring-boot-starter-validation")  
+implementation("org.springframework.boot:spring-boot-starter-web")
+
+# AutoConfiguration
+Spring Boot ValidationAutoConfiguration 클래스를 통해서 LocalValidatorFactoryBean와 MethodValidationPostProcessor를 자동으로 설정합니다.
+
+LocalValidatorFactoryBean는 Spring에서 Validator를 사용하기 위해서 필요하고 MethodValidationPostProcessor는 메서드 파라미터 또는 리턴 값을 검증하기 위해서 사용됩니다.
+
+AutoConfiguration으로 별다른 설정 없이 Spring Boot에서 바로 Validation을 사용할 수 있습니다.
+
+# 경로 : Application.class 내 Bean 선언, @Validated 사용 가능
+@Bean
+public javax.validation.Validator localValidatorFactoryBean(){
+    return new LocalValidatoryFactoryBean();
+}
+
+# 위 클래스에 설정은 아래와 같이 Bean 선언과 동일함
+# 이를 통해 응용 프로그램에서 유효성 검사가 필요한 어느 곳에서든지 javax.validation.ValidatorFactory 
+# 또는 javax.validation.Validator를 주입할 수 있습니다.
+<bean id="validator"
+    class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
+
+# modelmapper 선언, Application.class
+@Bean
+public ModelMapper modelMapper() {
+    return new ModelMapper();
+}
+
+# modelmapper 사용, service impl 에서 @Autowired
+@Autowired
+private ModelMapper modelMapper;
+
+# dto 타입에 request 객체(AlimPushRequest)를 PushAndroidMessage.AlimMessage 로 매핑
+# service impl 구현
+PushAndroidMessage.AlimMessage alimMessage = modelMapper.map(alimPushRequest, PushAndroidMessage.AlimMessage.class); 
+
+# dto 객체
+public class AlimPushRequest extends BaseRequest {
+    ...
+    @Getter
+    @Setter
+    @JsonProperty("type")
+    private String type;
+
+    @NotBlank
+    @Getter
+    @Setter
+    @JsonProperty("user_id")
+    private String userId;
+    ...
+}
+
+# 다른 타입에 객체
+public class PushAndroidMessage extends BaseObject {
+    ...
+    @Data
+    @EqualAndHashCode(callSuper=false)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(Include.NON_NULL)
+    public static class AlimMessage extends PushAndroidMessage {
+        private static final long serialVersionUID = .....;
+
+        ...
+        @JsonProperty("user_id")
+        private String userId;
+
+        @JsonProperty("date")
+        private String date;
+        ...
+    }
+
+    ...
+} 
+
+
