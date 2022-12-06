@@ -225,3 +225,70 @@ public class PushAndroidMessage extends BaseObject {
 } 
 
 
+# ObjectMapper.class 응답받은 JSON 객체를 POJO 형태로 deserialization 시켜 내가 원하는 데이터로 변환
+# ObjectMapper 클래스를 이용하여 JSON 객체를 역직렬화
+# JSON 컨텐츠를 Java 객체로 deserialization 하거나 Java 객체를 JSON으로 serialization 할 때 사용하는 Jackson 라이브러리의 클래스
+# ObjectMapper는 생성 비용이 비싸기 때문에 bean/static으로 처리하는 것이 좋다.
+# 출처) https://velog.io/@zooneon/Java-ObjectMapper%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%98%EC%97%AC-JSON-%ED%8C%8C%EC%8B%B1%ED%95%98%EA%B8%B0
+
+# Application 에 bean 선언
+@Bean(name="objectMapper")
+public ObjectMapper objectMapper(){
+    return new ObjectMapper();
+}
+
+# ObjectMapper 사용, service impl 에서 @Autowired 로 사용
+public class AccessLogSerivceImpl implements AccessLogService {
+    private Logger accessLog = LoggerFactory.getLogger("accessLog"); // 기본 로그
+    private Logger accessLogJson = LoggerFactory.getLogger("accessLogJson"); // json 형식으로 찍는 로그
+
+    @Value("#{config['access.log.json.yn']}")
+    private String accessLogJsonYn; // 외부경로 config 파일에서 읽음(Application.class 에서 선언됨)
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private TypeReference<LinkedHashMap<String,Object>> typeRefLHM = new TypeReference<LinkedHashMap<String,Object>>() {};
+    String[] toJsonColumns = new String[]{"requestPayload","responsePayload"};
+
+    @Override
+    public void insertAccessLog(AccessLogModel accessLogModel){
+        if(StringUtils.isBlank(accessLogModel.getVersion()) || StringUtils.isBlank(accessLogModel.getApiCode())){
+            log.warn("Version-apicode blank [{}]", accessLogModel.toString());
+        }
+        accessLog.info(accessLogModel.toString());
+        if(조건){
+            try {
+                LinkedHashMap<String, Object> accessLogMap = objectMapper.convertValue(accessLogModel, param2);
+                for(String col : toJsonColumns){
+                    Object value = null;
+                    try{
+                        value=objectMapper.readValue((String) accessLogMap.get(column), param2)
+                    }catch(ServiceResultException se){
+                        value=accessLogMap.get(column);
+                    }catch(Exception e){
+                        value=accessLogMap.get(column);
+                    }
+                    finally {
+                        accessLogMap.put(column, value);
+                    }
+                }
+                accessLogJson.info(objectMapper.writeValueAsString(accessLogMap));
+            }catch(ServiceResultException se){
+                log.warn("ERROR ["+se.getMessage()+ "]", se);
+            }catch(Exception e){
+                log.warn("ERROR ["+e.getMessage()+ "]", e);
+            }
+        }
+    }
+    
+}
+
+# Scheduled executor service
+@Bean 
+public ScheduledExecutorFactoryBean scheduledExecutorSerivce(){
+    ScheduledExecutorFactoryBean bean = new ScheduledExecutorFactoryBean();
+    bean.setPoolSize(10);
+    return bean;
+}
+
