@@ -285,10 +285,100 @@ public class AccessLogSerivceImpl implements AccessLogService {
 }
 
 # Scheduled executor service
+# 반복적인 Batch 작업들은 Spring에서 제공하는 Scheduler를 이용하여 구현할 수 있다.기본 동작 원리는 java concurrent 패키지에서 제공하는 것과 동일하지만 Bean으로 등록되어 Container에 의해 관리되는 것이 다르다. 도한 cron expression을 제공하여 친숙(?)하게 스케쥴을 세팅할 수 있다.
+/*
+* 아래 ExecutorFactoryBean을 선언하면 해당 Executor Factory Bean내에서 만들어진 Thread(thread-pool-1-thread-1)에서 Scheduler들이 호출되고,만약 선언하지 않으면 기본 worker pool의 thread에서 Scheduler가 호출된다.
+*/
 @Bean 
 public ScheduledExecutorFactoryBean scheduledExecutorSerivce(){
+    //궁금하면 찍어보자
+    //System.out.println("scheduledExecutorService => now " + " in thread-" + Thread.currentThread().getName());
+
     ScheduledExecutorFactoryBean bean = new ScheduledExecutorFactoryBean();
     bean.setPoolSize(10);
     return bean;
 }
 
+# Thread Pool Task Executor
+# Application.class 선언
+# ThreadPoolTaskExecutor 는 스프링에서 제공하는 async(비동기)처리 executor
+# 스레드풀을 이용한 멀티스레드 구현
+@Bean
+public ThreadPoolTaskExecutor threadPoolTaskExecutor(){
+    HandlingThreadPoolTaskExecutor executor = new HandlingThreadPoolTaskExecutor();
+    executor.setCorePoolSize(Runtime.getRuntime().availableProcessors());  // 동시실행 스레드 개수
+    executor.setMaxPoolSize(Runtime.getRuntime().availableProcessors()*2); // 스레드풀 최대
+    executor.setQueueCapacity(executorQueueCapacity);  // CorePoolSize 개수를 넘으면 Max 까지 Queue 에 Task 가 쌓임
+    executor.setAllowCoreThreadTimeOut(true); // keepAliveSecond 이 지나면 코어개수 10 이여도 줄어듬
+    executor.setThreadNamePrefix("threadPoolTaskExecutor-");
+    executor.initialize(); //initialize 하기전에는 executor 를 사용할수 없다.
+    return executor;
+}
+
+# serverpath 는 tomcat 기동 시 env.sh 에 환경변수로 설정됨
+# JAVA_OPTS="$JAVA_OPTS -Dvsaas.env=/data"
+# JAVA_OPTS="$JAVA_OPTS -Dspring.profile.active=dev|stage|prod"
+@Value("file://${환경변수에 설정된경로}/config/gus/${spring.profile.active}/config.xml")
+private Resource configResource;
+@Value("#{config['executor.queue.capacity']}")
+private int executorQueueCapacity;
+
+# 공통 config XML 파일 로드 시 내부 패키지 내 설정파일 load(외부는 위에 내용 정리참고)
+# Application.class 에 선언
+@Value("classpath:com/gus/study/commons/propety/config-${spring.profile.active}.xml")
+private Resource commonConfigResource;
+
+# Spring batch 와 Schedule 
+# 별도의 batch job class 생성하고 배치처리 메소드 구현
+@Slf4j
+@Component("GusBatchJob")
+@PropertySource(value={"file://${환경변수에 설정된경로}/config/gus/${spring.profile.active}/config.xml"})
+public class GusBatchJob {
+    ...
+    // 3초마다 실행
+    @Scheduled(cron="3 * * * * *")
+    public void deleteBatch(){
+        //validation
+        //insert log
+        try{
+            //기능구현 deletebatch 기능
+            String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+            logger.info("[START] "+ jobName + "." + methodName + " executing at " + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss")+"");
+            //실제 dml 처리
+            logger.info("[END] "+ jobName + "." + methodName + " executing at " + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss")+"");
+        }     
+    }
+    ...
+}
+
+# 서버 호스트명 찾는 메소드 구현
+# get Host name
+public String getHostname(){
+    String hostname = null;
+    Process process = null;
+    BufferedReader br = null;
+    try {
+        process = Runtime.getRuntime().exec("hostname");
+        br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        String lineStr = null;
+        while((lineStr = br.readLine()) != null){
+            hostname = lineStr.trim();
+        }
+    }catch(IOException e){
+
+    }finally{
+        if(br != null){
+            try{
+                br.close();
+                br = null;
+            }catch(IOException e){
+                br = null;
+            }
+        }
+
+        if(process != null){
+            process.destroy();
+        }
+    }
+    return hostname;
+}
