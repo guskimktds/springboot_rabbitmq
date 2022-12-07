@@ -382,3 +382,70 @@ public String getHostname(){
     }
     return hostname;
 }
+
+# MulitpartResolver bean 선언
+
+
+## Database Configuration 구현
+## Database 연결
+# DatabaseConfiguration.class
+# @EnableTransactionManagement(proxyTargetClass = true) 사용이유(목적)
+
+@Slf4j
+@Configuration
+@EnableTransactionManagement(proxyTargetClass = true)
+@PropertySource(value = {"file://${환경변수에 설정된경로}/config/gus/${spring.profile.active}/database.xml"})
+public class DatabaseConfiguration {
+
+    //MyBatis Config 파일 경로 설정
+    private static final String MYBATIS_CONFIG_FILE = "패키지 내 설정 경로/mybatis-config.xml";
+    //MyBatis Mapper 파일 경로 설정MYBATIS_CONFIG_FILE
+    private static final String MYBATIS_MAPPER_PATH = "classpath:패키지 내 설정 경로/mapper/*.xml";
+
+    @Autowired
+    private Environment env;  //@PropertySource 경로에 propety 를 load 해서 key, value 를 가져오기 위한 용도로 선언
+
+    @Autowired
+    private Properties commonConfig;  //Application 에 선언한 common config 를 로드하여 bean 객체를 생성, 패키지내 config 파일 로드 
+
+    //Data Source 설정
+    @Bean(name = "dataSource")
+    public DataSource dataSource() {
+
+        String environment = commonConfig.getProperty("server.environment");
+
+        BasicDataSource dataSource = new BasicDataSoruce();
+        dataSource.setComment(StringUtils.trim(env.getProperty(String.format("postgresql.%s.comment", dbsource))));
+        dataSource.setDriverClassName(StringUtils.trim(env.getProperty(String.format("postgresql.%s.jdbc.driver", dbsource))));
+        dataSource.setUrl(StringUtils.trim(env.getProperty(String.format("postgresql.%s.jdbc.url", dbsource))));
+        dataSource.setUsername(StringUtils.trim(env.getProperty(String.format("postgresql.%s.username", dbsource))));
+        dataSource.setPassword(StringUtils.trim(env.getProperty(String.format("postgresql.%s.password", dbsource))));
+        dataSource.setValidationQuery(StringUtils.trim(env.getProperty(String.format("postgresql.%s.validation.query", dbsource))));
+        ...
+        int initSize = NumberUtils.toInt(env.getProperty(String.format("postgresql.%s.initial.size", dbsource)));
+        if(initSize > 0){
+            dataSource.setInitialSize(initSize);
+            //... setMaxTotal, setMaxWaitMillis, setMaxIdle, setMinIdle
+        }
+        return new DataSourceSpy(dataSource);
+    }
+
+}
+
+## SqlSessionFactory 사용법
+# 
+
+@Bean(name="sqlSessionFactory")
+public SqlSessionFactory sqlSessionFactory() throws Exception {
+    String environment = commonConfig.getProperty("server.environment");  //패키지 내 config xml 설정에서 로드
+    log.debug("{} sqlSessionFactory; Server Environment:: {}", this.getClass().getName(), environment);
+
+    SqlSessionFactoryBean bean = new SqlSessionFactoryBean();
+    bean.setDataSource(this.dataSource());
+
+    // MyBatis 설정파일 위치 설정
+    bean.setConfigLocation(new ClassPathResource(MYBATIS_CONFIG_FILE));
+
+    // MyBatis 설정파일 위치 설정
+    bean.setMapperLocations(new PathMatchResourcePatternResolver().getResource(MYBATIS_CONFIG_FILE));
+}
