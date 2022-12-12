@@ -449,3 +449,35 @@ public SqlSessionFactory sqlSessionFactory() throws Exception {
     // MyBatis 설정파일 위치 설정
     bean.setMapperLocations(new PathMatchResourcePatternResolver().getResource(MYBATIS_CONFIG_FILE));
 }
+
+
+# @JsonIgnoreProperties(ignoreUnknown = true) 선언
+# json 데이터를 받아와서 객체로 맵핑할 때 클래스에 선언되지 않은 프로퍼티가 json에 있으면 오류 발생 (json 구성 = 클래스 구성)
+ => org.codehaus.jackson.map.exc.UnrecognizedPropertyException
+이럴 때 예외 발생시키지 말고 무시하기 위해 @JsonIgnoreProperties(ignoreUnknown = true) 추가
+
+# null 필드를 노출하지 않으려면
+@JsonInclude(JsonInclude.Include.NON_NULL) 어노테이션을 필드에 선언해주면 된다.
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+public class A {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String name;
+    private Integer age; // 미선언
+}
+# 아래와 같이 리턴 표시됨, 미선언 필드만 null 표시
+"A": {
+    "age": null
+}
+
+# 보통 자바는 카멜 케이스를, JSON형식은 스테이크 케이스 방식
+# @JsonProperty 는 필드에, @JsonNaming 는 클래스에 어노테이션을 사용
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+// @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class) deprecated
+public static class UserRequest {
+    ...
+    //또는 아래와 같이
+    //@JsonProperty 필드마다 적용
+    @JsonProperty("cam_id")
+    private String camId;  //선언은 스네이크케이스, 변수는 카멜케이스
+}
