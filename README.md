@@ -481,3 +481,159 @@ public static class UserRequest {
     @JsonProperty("cam_id")
     private String camId;  //선언은 스네이크케이스, 변수는 카멜케이스
 }
+
+# Web MVC Architecture 구성하기
+# Servlet Context 또는 classpath 하위의 경로에 있는 정적 리소스는 자동으로 반환을 하도록 설정되어 있다 
+  /static
+  /public
+  /resources
+  /META-INF/resources
+
+# 특정경로에 정적자원을 저장해두고, 그 경로에서 응답을 해주는 경우 addResourceHandlers 메소드를 오버라이드함으로써 설정한다.
+# WebMvcConfigurer를 상속받은 클래스(또는 WebMvcConfigurerAdapter 를 상속받은 클래스)에 Configuration, EnableWebMvc 애너테이션을 추가
+# 출처 : https://creampuffy.tistory.com/119
+...
+@Configuration
+@EnableWebMvc
+public class MvcConfig implements WebMvcConfigurer {
+
+    // 개발 시점에 사용 가능한 코드.
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry
+          .addResourceHandler("/resources/**")
+          .addResourceLocations("/resources/");	
+    }
+    
+    // 배포 시점에 사용 가능한 코드.
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    	registry
+      	 .addResourceHandler("/files/**")
+      	 .addResourceLocations("file:/opt/files/");
+         
+         // 윈도우라면
+         .addResourceLocations(“file:///C:/opt/files/“);
+ 	}
+}
+...
+
+# Spring MVC 실행과정 및 Controller 작성
+실행 과정
+1. 주소창에 http://~/xxxx 입력
+2. DispatcherServlet → Controller : Controller에서 path가 /xxxx인 메소드 실행
+3. Controller → DispatcherServlet : InternalResourceViewResolver가 가져온 return 값에 "/WEB-INF/views/"와 ".jsp"를 붙임
+4. DispatcherServlet → View template : return 받은 "/WEB-INF/views/xxxx.jsp" 경로 파일 실행
+(아래 DispatcherServlet 설정 참고)
+
+# 여기서 DispatcherServlet 은 DispatcherServlet(=WebMvcContextConfiguration.java) 설정
+# 즉, 아래와 같이 WebMvcConfigurerAdapter 를 구현한 클래스이고, addResourceHandlers 메소드는 정적리소스를 저장해놓고 응답처리하기 위한 메소드
+@Configuration
+@EnableWebMvc
+@ComponentScan(basePackages = { "kr.or.connect.mvcexam.controller" })
+public class WebMvcContextConfiguration extends WebMvcConfigurerAdapter {
+	@Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/assets/**").addResourceLocations("classpath:/META-INF/resources/webjars/").setCachePeriod(31556926); 
+        registry.addResourceHandler("/css/**").addResourceLocations("/css/").setCachePeriod(31556926);
+        registry.addResourceHandler("/img/**").addResourceLocations("/img/").setCachePeriod(31556926);
+        registry.addResourceHandler("/js/**").addResourceLocations("/js/").setCachePeriod(31556926); 
+    }
+  ...
+
+## WebMvcConfiguration.java (=WebMvcConfigurerAdapter 를 구현한)에 ViewResolver  
+## setCachePeriod 는 http 캐시(cache) 유효기간을 초단위로 지정 (604800 = 7일, 31556926 = 365일)
+
+## HTTP 캐시를 제어하는 기능
+## If-Modified-Since 헤더값과 리소스의 최종 수정 일시를 비교
+만약 리소스가 갱신되지 않았으면 HTTP 304상태 (Not Modified) 반환
+기본구현에서는 캐시의 유효기간이 설정되지 않아 캐시에 대한 동작은 브라우저 사양에 의존
+
+## 기본구현
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    registry.addResourceHandler("/static/**")
+      .addResourceLocations("classpath:/static/")
+      .setCachePeriod(604800); // 유효기간을 초단위로 지정 (604800 = 7일)
+}
+
+## 캐시를 세밀하게 제어할 때 (CacheControl클래스 이용)
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    registry.addResourceHandler("/static/**")
+      .addResourceLocations("classpath:/static/")
+      .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());  //CacheControl클래스 이용
+}
+
+## ResourceHttpRequestHandler 란?
+# 정적리소스에 접근하는 다양한 방법을 제공
+# 버전 정보가 포함된 경로로 정적리소스를 접근하는 방법
+# Gzip으로 압축된 정적 리소스에 접근하는 방법
+# Webjars로 관리되는 정적 리소스에 대해 버전 번호를 은폐시켜 접근하는 방법
+## 출처) https://moonscode.tistory.com/125
+
+
+## ResourceHttpRequestHandler 는 종류가 2가지임
+# 1) ResourceResolver 인터페이스
+  정적리소스에 접근할 수 있도록 URL과 서버 상의 물리적인 정적 리소스를 매핑 
+  구현클래스는 아래와 같다.
+    VersionResourceResolver, GzipResourceResolver, WebJarsResourceResolver
+    예시) 버전정보를 포함한 경로로 정적 리소스 접근
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/static/**")
+        .addResourceLocations("classpath:/static/")
+        .resourceChain(true)
+        .addResolver((new VersionResourceResolver()).addContentVersionStrategy("/**"));
+    }
+# 2) ResoureceTransformer 인터페이스
+  정적 리소스의 콘텐츠 데이터를 변환하는 역할
+  구현클래스는 아래와 같다.
+    CssLinkResourceTransformer, AppCacheManifestTransformer
+
+## 출처) https://moonscode.tistory.com/125
+
+## Content Negotiation 이란? 
+# REST에서는 하나의 리소스에 대해서 여러 형태의 Representation을 가질수 있다.
+# 요청에 대한 응답을 application/json 형태로 할 수도 있고, application/xml 형태로 할 수도 있다.
+# 클라이언트가 요청을 전달할 때 HTTP Header 중에서 Accept라는 이름을 이용해서 원하는 응답 형태를 명시하면
+# 서버에서는 클라이언트가 원하는 형태로 결과를 전달
+
+## configureContentNegotiation 란?
+WebMvcConfigurer의 configureContentNegotiation를 이용해서 미디어 타입을 설정할 수 있습니다.
+즉, WebMvcConfigurerAdapter 를 상속받은 클래스 내 configureContentNegotiation을 오버라이드(@Override)해서 원하는 미디어타입으로 응답을 처리
+또는 WebMvcConfigurer 를 구현한 클래스(WebMvcConfig)에서 아래와 같이 처리
+
+예시)WebMvcConfigurer 구현
+public class WebMvcConfig implements WebMvcConfigurer {
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer.favorParameter(true)
+                  .ignoreAcceptHeader(false)
+                  .defaultContentType(MediaType.APPLICATION_JSON)
+                  .mediaType("json", MediaType.APPLICATION_JSON)
+                  .mediaType("xml", MediaType.APPLICATION_XML);
+    }
+}
+
+예시) WebMvcConfigurerAdapter 를 상속받은 클래스
+public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer.favorPathExtension(false)
+                  .favorParameter(true)
+                  .parameterName("mediaType")
+                  .ignoreAcceptHeader(true)
+                  .useJaf(false)
+                  .defaultContentType(MediaType.APPLICATION_JSON)
+                  .mediaType("xml",MediaType.APPLICATION_XML)
+                  .mediaType("json",MediaType.APPLICATION_JSON);
+
+    }
+}
+
+## 클라이언트로부터 수신된 요청의 미디어 타입을 가지고 결정하는데, 그 과정은 아래와 같다.
+# 1. favorParameter 속성 값이 true(기본값 false)이고, 요청 파라미터에 미디어 타입을 정의하는 값이 포함되어 있다면 그 값을 미디어 타입으로 사용합니다. 파라미터의 변수명은 'format' 입니다.
+(예 : http://localhost:8080/board?format=xml, http://localhost:8080/board?format=json)
+# 2. 미디어 타입을 찾지 못한 경우 ignoreAcceptHeader의 속성 값이 false(기본값 false)이면 HTTP Header 값의 Accept를 미디어 타입으로 사용합니다.
+# 3. 미디어 타입을 찾지 못한 경우 ContentNegotiationConfigurer에 defaultContentType 속성 값이 정의되어 있다면 그 값을 미디어 타입으로 사용합니다.
+
