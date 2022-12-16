@@ -666,3 +666,4 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
 # JSON (MappingJacksonJsonView)
 # 출처) https://kaka7537.gitbooks.io/spring-diary/content/contentnegotiatingviewresolver.html
 스프링에서 JSON 포맷을 지원하는 View는 org.springframework.web.servlet.view.json.MappingJacksonJsonView 클래스이다. 이 View를 사용하면 스프링의 컨트롤러가 객체를 리턴하는 경우 객체의 내용을 분석하여 JSON 포맷으로 변환하여 보내주게 된다.
+

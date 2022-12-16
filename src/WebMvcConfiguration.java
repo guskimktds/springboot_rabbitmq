@@ -80,6 +80,9 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter implements Init
         return ds;
     }
 
+    /**
+     * Post 요청 시 한글 깨짐 보완
+     */
     @Bean
     public CharacterEncodingFilter characterEncodingFilter() {
         log.debug("{} characterEncodingFilter...", this.getClass().getName());
@@ -88,6 +91,16 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter implements Init
         characterEncodingFilter.setForceEncoding(true);
         return characterEncodingFilter;
     }
+
+    /**
+     * Cross Domain Filter 처리
+     */
+     @Bean
+     public AllowFilter allowFilter(){
+        log.debug("{} allowFilter...", this.getClass().getName());
+        final AllowFilter allowFilter = new AllowFilter();
+        return allowFilter;
+     }
 }
 
 //출처 https://www.inflearn.com/questions/108303/setcacheperiod-%EB%A9%94%EC%86%8C%EB%93%9C%EC%97%90-%EB%8C%80%ED%95%B4
