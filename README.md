@@ -636,4 +636,33 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
 (예 : http://localhost:8080/board?format=xml, http://localhost:8080/board?format=json)
 # 2. 미디어 타입을 찾지 못한 경우 ignoreAcceptHeader의 속성 값이 false(기본값 false)이면 HTTP Header 값의 Accept를 미디어 타입으로 사용합니다.
 # 3. 미디어 타입을 찾지 못한 경우 ContentNegotiationConfigurer에 defaultContentType 속성 값이 정의되어 있다면 그 값을 미디어 타입으로 사용합니다.
+## 유사한 설명 추가
+# 첫 째, favorPathExtension이라는 불리언 타입의 프로퍼티를 보고 이 값이 true이면 URL의 확장자를 통해 mediatype을 결정하겠다는 것이다. (디폴트 값은 true)
+# 둘 째, URL 호출 시 특정 파라미터로 리턴포맷을 결정하는 것을 허용하는 것이다. 예를 들어, a.do?format=xml이면 스프링에서 format 파라미터의 값을 읽어서 결정한다. favorParameter 프로퍼티와 parameterName이라는 프로퍼티를 이용해서 할 수 있다. (디폴트는 favorParameter는 false, parameterName은 format)
 
+# contentNegotiatingViewResolver 란? mvc view resolver setting 
+
+
+
+# XML (Marshalling View)
+# 출처) https://kaka7537.gitbooks.io/spring-diary/content/contentnegotiatingviewresolver.html
+자바 객체의 변환에 있어 흔히 사용되는 단어가 마샬링과 언마샬링이다. 마샬링은 자바 객체를 XML로 변환하는 작업이고 언마샬링은 그 반대를 말한다. CNVR에서 마샬링 작업에 사용되는 View 클래스는 org.springframework.web.servlet.view.xml.MarshallingView 클래스이다. 하지만 이것만으로 자바 객체를 XML로 변환할 수 없다. 자바 객체를 XML로 변환하는 기능을 제공하는 라이브러리를 생성자를 통하여 전달하여야 한다. 스프링에서 제공하는 XMl 변환 기능을 수행하는 클래스, 즉 마샬러 중에 하나는 org.springframework.oxm.jaxb.Jaxb2Marshaller 클래스이다.
+
+마샬러가 어떤 클래스들을 XML로 변환할 것인지 작업대상을 정해주어야 한다.
+
+<bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+    <constructor-arg>
+        <bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+            <property name="classesToBeBound">
+                <list>
+                    <value>myprj.vo.Result</value>
+                    <value>myprj.vo.Info</value>
+                </list>
+            </property>
+        </bean>
+    </constructor-arg>
+</bean>
+
+# JSON (MappingJacksonJsonView)
+# 출처) https://kaka7537.gitbooks.io/spring-diary/content/contentnegotiatingviewresolver.html
+스프링에서 JSON 포맷을 지원하는 View는 org.springframework.web.servlet.view.json.MappingJacksonJsonView 클래스이다. 이 View를 사용하면 스프링의 컨트롤러가 객체를 리턴하는 경우 객체의 내용을 분석하여 JSON 포맷으로 변환하여 보내주게 된다.
