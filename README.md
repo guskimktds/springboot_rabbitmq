@@ -667,3 +667,13 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
 # 출처) https://kaka7537.gitbooks.io/spring-diary/content/contentnegotiatingviewresolver.html
 스프링에서 JSON 포맷을 지원하는 View는 org.springframework.web.servlet.view.json.MappingJacksonJsonView 클래스이다. 이 View를 사용하면 스프링의 컨트롤러가 객체를 리턴하는 경우 객체의 내용을 분석하여 JSON 포맷으로 변환하여 보내주게 된다.
 
+# FiterRegistrationBean 이란 ? 
+# 필터 클래스를 만들면 이 필터를 Spring Bean 으로 등록해야 합니다. 
+# 만약에 ResponseLoggingFilter 를 구현했다면, 아래와 같이 등록한다. 
+@Bean
+public FiterRegistrationBean getFilterRegistrationBean() {
+FilterRegistrationBean registrationBean = new FilterRegistrationBean(new ResponseLoggingFilter());
+    // registrationBean.addUrlPatterns("/*"); //서블릿 등록 빈 처럼 패터늘 지정해 줄 수 있다.
+return registrationBean;
+}
+

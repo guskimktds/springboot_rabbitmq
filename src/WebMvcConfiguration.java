@@ -101,6 +101,50 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter implements Init
         final AllowFilter allowFilter = new AllowFilter();
         return allowFilter;
      }
+
+     /**
+      * 종료 시 처리할 내용
+      */
+      @Override
+      public void destroy() throws Exception {
+        // 종료 시 처리할 내용 추가
+        log.debug("Spring Boot end Add content to process");
+      }
+
+      public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        ThreadPoolTaskExecutor e = new ThreadPoolTaskExecutor();
+        e.setCorePoolSize(5);
+        e.initialize();
+        configurer.setTaskExecutor(e);
+      }
+
+      @Override
+      public void afterPropertiesSet() throws Exception {
+        int validation = validationService.getValidation();
+        log.debug("Validation:: {}", validation);
+      }
+
+      /**
+       * Response Logging Fiter
+       * 필터는 org.springframework.boot.web.servlet.FilterRegistrationBean
+       */
+      @Bean
+      public FiterRegistrationBean getFilterRegistrationBean() {
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean(new ResponseLoggingFilter());
+            // registrationBean.addUrlPatterns("/*"); //서블릿 등록 빈 처럼 패터늘 지정해 줄 수 있다.
+        return registrationBean;
+      }
+
+      @Bean
+      public RequestLogginFilter requestLoggingFilter() {
+        log.debug("{} requestLoggingFilter...", this.getClass().getName());
+        final RequestLogginFilter requestLoggingFilter = new RequestLogginFilter();
+        requestLoggingFilter.setIncludeQueryString(true);
+        requestLoggingFilter.setIncludeClientInfo(true);
+        requestLoggingFilter.setIncludePayload(true);
+        requestLoggingFilter.setMaxPayloadLength(500);
+        return requestLoggingFilter;
+      }
 }
 
 //출처 https://www.inflearn.com/questions/108303/setcacheperiod-%EB%A9%94%EC%86%8C%EB%93%9C%EC%97%90-%EB%8C%80%ED%95%B4
