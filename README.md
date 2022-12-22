@@ -677,3 +677,47 @@ FilterRegistrationBean registrationBean = new FilterRegistrationBean(new Respons
 return registrationBean;
 }
 
+##  
+# DataSourceAutoConfiguration 
+# read, read+write DB Configuration
+# @Bean(name = "dataSource") 과 @Bean(name = "dataSourceDbwriter") 로 class 를 나누고
+# MyBatis Config, Mapper 등 경로를 분리하고 해당  Data Source 를 설정한다.  
+public class DatabaseConfiguration {
+
+    //MyBatis Config
+    private static final String MYBATIS_CONFIG_FILE = "com/study/gus/persistence/mybatis-config.xml";
+    //MyBatis Mapper
+    private static final String MYBATIS_MAPPER_PATH = "classpath:com/study/gus/persistence/mapper/*.xml";
+
+    @Bean(name = "dataSource")
+    public DataSource dataSource() {
+        ...
+        return new DataSourceSpy(dataSource);
+    }
+}
+
+public class DatabaseWriterConfiguration {
+
+    //MyBatis Config
+    private static final String MYBATIS_CONFIG_FILE = "com/study/gus/persistence/mybatis-config.xml";
+    //MyBatis Mapper
+    private static final String MYBATIS_MAPPER_PATH = "classpath:com/study/gus/persistence/dbwriter/*.xml";
+
+    @Bean(name = "dataSourceDbwriter")
+    public DataSource dataSource() {
+        ...
+        return new DataSourceSpy(dataSource);
+    }
+}
+
+
+# DataSourceSpy 란? 
+# DataSourceSpy란 클래스는 log4jdbc에서 제공하는 DataSource 인터페이스를 구현한 클래스
+# Sql Log를 출력하기 위해 직/간접적으로 사용되는 메소드들의 인터페이스
+# 출처 : https://okky.kr/articles/338191
+
+
+##
+# Redis Cluster & Configuration
+# 출처 : https://theserverside.tistory.com/302
+public JedisPoolConfig jedisPoolConfig(){...}
