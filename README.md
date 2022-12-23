@@ -721,3 +721,45 @@ public class DatabaseWriterConfiguration {
 # Redis Cluster & Configuration
 # 출처 : https://theserverside.tistory.com/302
 public JedisPoolConfig jedisPoolConfig(){...}
+
+
+## XFF(X-Forwarded-For), Client IP 확인하는 방법
+## 출처 : https://www.lesstif.com/software-architect/proxy-client-ip-x-forwarded-for-xff-http-header-20775886.html
+ 
+
+## Slf4j MDC (Mapped Diagnostic Context) 란?
+
+## package-info.java 란
+# javadocs를 생성
+# package-info.java는 자바 소스 패키지에 추가 할 수있는 자바 파일입니다. 이름에 따라 “패키지”수준에서 정보를 제공하는 데 사용됩니다. 패키지에 사용 된 설명서와 주석이 포함되어 있습니다.
+javadoc 예제는 이미 답변에 제공되어 있으며 아래 부분에서는 주석의 경우 작동 방식을 설명합니다.
+예를 들어, 아래 파일에서는 joda.time.DateTime의 발생을 org.jadira.usertype.dateandtime.joda.PersistentDateTime으로 “대체”하는 데 사용됩니다.
+# 출처 : http://daplus.net/java-package-info-java%EA%B0%80-%EC%9C%A0%EC%9A%A9%ED%95%9C-%EC%9D%B4%EC%9C%A0%EB%8A%94-%EB%AC%B4%EC%97%87%EC%9E%85%EB%8B%88%EA%B9%8C/
+
+
+## ThreadPoolTaskExecutor
+# 비동기 방식의 멀티스레드 처리
+# 출처 : https://kim-jong-hyun.tistory.com/104
+
+컨트롤러에서는 MultipartFile을 List로 받아서 upload
+serivce 단에서 upload 기능구현 
+multipartFile 처리 부분만 신경 쓰면 됨
+
+# 멀티파트파일(MultipartFile)이란? 사용자가 업로드한 파일을 핸들러가 쉽게 처리할 수 있는 객체이다.
+# 매개변수를 사용하려면 MultipartResolver Bean 이 등록되어야 하며, Springboot 는 자동등록을 지원하나, springMVC 에 수동으로 등록해야한다.
+# 출처 : https://kkumalog.tistory.com/74
+
+## Correlation id & MDC 
+하나의 프로그램은 여러개의 메서드들로 조합이 된다. 하나의 요청을 처리하기 위해서는 여러개의 메서드들이 순차적으로 실행이 되는데, 멀티 쓰레드 프로그램에서 여러개의 쓰레드 동시에 각각의 요청을 처리할때, 각 메서드에 로그를 남기게 되면, 멀티 쓰레드 프로그램에서는 쓰레드들이 서로 컨택스트를 바꿔가며 실행이 되기 때문에, 로그 메시지가 섞이게 된다
+# 멀티요청 중에 각각의 요청에 대한 id 를 부여하고 해당 id 로 조회가능하게 로그를 묶어서 처리가 가능하다. 
+# 이를 Correlation id 라고 한다. 출처) https://bcho.tistory.com/1316
+# ThreadLocal
+요청을 받은 메서드에서 Correlation ID를 생성한 후, 다른 메서드를 호출할때 마다 이 ID를 인자로 넘기는 방법이 있지만, 이 방법은 현실성이 떨어진다. ID를 넘기기 위해서 모든 메서드에 공통적으로 ID 필드를 가져야 하기 때문이다.
+이런 문제는 자바에서는 ThreadLocal이라는 변수를 통해서 해결할 수 있다.
+ThreadLocal을 쓰레드의 로컬 컨텍스트 변수로 Thread 가 존재하는 한 계속해서 남아 있는 변수이다.  
+그래서 요청을 처음 받았을때 Correlation ID를 생성하고, 이를 ThreadLocal에 저장했다가 로그를 쓸때 매번 이 ID를 ThreadLocal에서 꺼내서 같이 출력하면 된다. 
+# MDC
+ThreadLocal 과 같은걸 일일이 구현하기에는 불편할 수 있기 때문에, slf4j,logback,log4j2등의 자바 로그 프레임워크에서는 이런 기능을 MDC(Mapped Diagnostic Context)로 제공한다. 
+단순하게 CorrelationID 뿐만 아니라 map 형식으로 여러 메타 데이타를 넣을 수 있다.
+
+

@@ -64,6 +64,8 @@ public class RedisClusterConfig {
         }catch(Exception ex) {
             jedisCluster = null;
         }
+
+        return jedisCluster;
     }
 
     // 출처 : https://dakafakadev.tistory.com/109
