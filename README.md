@@ -763,3 +763,23 @@ ThreadLocal 과 같은걸 일일이 구현하기에는 불편할 수 있기 때�
 단순하게 CorrelationID 뿐만 아니라 map 형식으로 여러 메타 데이타를 넣을 수 있다.
 
 
+# 토큰인증 방식 처리 플로우 분석
+
+토큰요청
+
+# how to write bash shell script 
+# Bourne-again shell (bash)
+  GNU 운영체제와 리눅스, 맥 OS 등 기본 쉘로 채택 되어있다
+  설치 위치는 '/bin/bash' 이다.
+# 출처) https://bangu4.tistory.com/242
+# 사용자가 계정으로 로그인 함과 동시에 읽어드리는 쉘 설정 파일들이 존재한다. (profile, bash 등..)
+# 1.  /etc/profile
+# 1-1.로그인 과정에서 제일 먼저 실행되는 환경 파일
+# 1-2. root로 로그인 하는 경우 일반사용자들과는 달리 PATH 변수에 관리 명령이나 도구가 설치되어 있는 /sbin, /usr/sbin, /usr/local/sbin 경로가 설정
+# 2. /etc/profile.d/*.sh
+# 3. ~/.bash_profile
+# 4. ~/.bashrc
+# 5. /etc/bashrc
+
+# 쉘 참고
+# 출처) https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=ooa1769&logNo=220521238103
