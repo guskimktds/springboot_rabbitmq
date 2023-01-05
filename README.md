@@ -783,3 +783,41 @@ ThreadLocal 과 같은걸 일일이 구현하기에는 불편할 수 있기 때�
 
 # 쉘 참고
 # 출처) https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=ooa1769&logNo=220521238103
+   
+# 출처) https://scshim.tistory.com/32   
+# spring framework 기본 개념
+# IoC, DI, Service Locator, Events, Delegates
+# 의존관계 : 한쪽의 변화가 다른 쪽에 영향을 주는 것, 
+자바에서는 인터페이스를 통해 의존관계를 제한하여 변경에서 자유로워질 수 있다.
+
+# ApplicationContext ?
+# 스프링 애플리케이션 전반에 걸쳐 모든 구성요소의 제어 작업을 담당하는 IoC 엔진이다.
+# IoC 방식을 따라 만들어진 일종의 빈 팩토리이다.
+빈 팩토리라고 말할 때는 빈을 생성하고 관계를 설정하는 IoC의 기본 기능에 초점을 맞춘 것이다. 
+애플리케이션 컨텍스트(ApplicationContext)는 별도의 정보를 참고해서 빈의 생성, 관계설정 등의 제어를 총괄한다.
+- 스프링은 기본적으로 별다른 설정을 하지 않으면 내부에서 생성하는 빈 오브젝트를 모두 싱글톤으로 만든다. 
+
+# Bean Factory란?
+빈의 생성과 관계설정 같은 제어를 담당하는 IoC 오브젝트이다.
+# Bean이란?
+스프링에서는 스프링이 제어권을 가지고 직접 생성하고, 의존관계를 부여하는 오브젝트를 Bean이라고 부른다.
+스프링에서 빈 등록은 XML, 자바 코드(애너테이션)를 통해 할 수 있다.
+
+# 스프링 jdbc
+JDBC를 이용하여 DB 연동 프로그램을 개발하면 데이터베이스에 비종속적인 DB 연동 로직을 구현할 수 있습니다.
+스프링 이러한 JDBC 기반의 DB 연동 프로그램을 쉽게 개발할 수 있도록 JdbcTemplate 클래스를 지원합니다.
+JdbcTemplate는 GOF 디자인 패턴 중 템플릿 메소드 패턴이 적용된 클래스
+
+# 웹서비스 
+# 출처) https://www.nextree.co.kr/p11410/
+웹서비스는 Consumer가 WSDL에서 검색한 service 에 요청 xml 을 보내면, Provider가 이문서를 객체로 변환해서 처리한 후 
+다시 Client에게 응답xml을 보내는 과정.
+서비스요청을 xml 로 바인딩하는 과정(marshaling or serialize)
+xml 을 처리 가능한 오브젝트로 바인딩하는 과정(unmarshaling or deserialize)
+
+# 출처) https://jeong-pro.tistory.com/129
+# 1. Spring Web Maven 프로젝트 생성
+# 2. CXF dependency 추가 ( cxf-rt-frontend-jaxw , cxf-rt-transports-http )
+# 3. web.xml 에 CXFServlet 을 추가하거나, CfxWebServiceConfiguration.class 를 구현
+## tip) servlet 3.0이 되면서 예전에 web.xml에서 하던 servlet에 대한 설정을 java config로 할 수 있다.
+## 출처) https://oingdaddy.tistory.com/431
